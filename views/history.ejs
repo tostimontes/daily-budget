@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Expense History</title>
+  <link rel='stylesheet' href='/stylesheets/output.css' />
+  <link href="/mdi/css/materialdesignicons.min.css" rel="stylesheet">
+</head>
+
+<body class="bg-gray-100">
+  <div class="container mx-auto px-4">
+    <h1 class="text-xl font-bold my-4">Expense History</h1>
+
+    <!-- Display History of Expenses -->
+    <ul>
+      <% expenses.forEach(exp => { %>
+      <li class="flex items-center">
+        <span>
+          <%= exp.name ? exp.name + ': ' : '' %><%= exp.amount %>€, <%= exp.date.toDateString() %>
+        </span>
+        <span>
+          <a href="/history/edit-expense/<%= exp._id %>" class="mdi mdi-pencil-outline">Edit</a>
+          <a href="/delete-expense/<%= exp._id %>" class="mdi mdi-delete-outline">Delete</a>
+        </span>
+      </li>
+      <% }) %>
+    </ul>
+
+    <a href="/" class="text-blue-500">Back to Dashboard</a>
+  </div>
+
+  <% if (expenseToEdit) { %>
+  <div id="editModal" class="modal">
+    <div class="modal-content">
+      <span class="close-button">&times;</span>
+      <form action="/update-expense/<%= expenseToEdit._id %>" method="post">
+        <input type="number" name="amount" value="<%= expenseToEdit.amount %>" required>
+        <button type="submit">Update Expense</button>
+      </form>
+    </div>
+  </div>
+  <% } %>
+
+  <script>
+    // JavaScript to handle modal opening and closing
+    if (document.getElementById('editModal')) {
+      const modal = document.getElementById('editModal');
+      const closeButton = document.querySelector('.close-button');
+      closeButton.addEventListener('click', () => {
+        modal.style.display = 'none';
+      });
+      window.addEventListener('click', (event) => {
+        if (event.target == modal) {
+          modal.style.display = 'none';
+        }
+      });
+    }
+  </script>
+</body>
+
+</html>

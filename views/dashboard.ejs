@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard</title>
+  <link rel='stylesheet' href='/stylesheets/output.css' />
+</head>
+
+<body class="bg-gray-100">
+  <div class="container mx-auto px-4">
+    <h1 class="text-xl font-bold my-4">Expense Tracker Dashboard</h1>
+
+    <!-- Display Budget and Expenses -->
+    <div>
+      <p class="font-bold">
+        <span class="text-gray-700"><%= date %></span>
+      </p>
+      <p class="font-bold">Budget for <%= month %>:
+        <span class="text-gray-700 font-bold"><%= budget ? budget.totalBudget.toFixed(2) : 'Not Set' %>€</span>
+      </p>
+      <br>
+      <p class="font-bold">Ongoing Expenses:
+        <span class="text-red-600"><%= expenses.reduce((acc, exp) => acc + exp.amount, 0).toFixed(2) %>€</span>
+      </p>
+      <p class="font-bold">Remaining Budget:
+        <span class="<%= remainingBudget >= 0 ? 'text-green-600' : 'text-red-600' %>"><%= remainingBudget.toFixed(2) %>€</span>
+      </p>
+      <br>
+      <p class="font-bold">Remaining Budget Per Day:
+        <span class="<%= 
+    remainingBudgetPerDay >= averageDailyBudget ? 'text-green-700' :
+    remainingBudgetPerDay >= averageDailyBudget * 0.75 ? 'text-green-400' :
+    remainingBudgetPerDay >= averageDailyBudget * 0.5 ? 'text-yellow-700' :
+    remainingBudgetPerDay >= averageDailyBudget * 0.25 ? 'text-red-400' : 
+    'text-red-700' %>"><%= remainingBudgetPerDay.toFixed(2) %>€</span>
+      </p>
+      <p class="font-bold">Ongoing Expenses Per Day:
+        <span class="<%= 
+    ongoingExpensesPerDay <= averageDailyBudget ? 'text-green-700' :
+    ongoingExpensesPerDay <= averageDailyBudget * 1.25 ? 'text-green-400' :
+    ongoingExpensesPerDay <= averageDailyBudget * 1.5 ? 'text-yellow-700' :
+    ongoingExpensesPerDay <= averageDailyBudget * 1.75 ? 'text-red-400' :
+    'text-red-700' %>"><%= ongoingExpensesPerDay.toFixed(2) %>€</span>
+      </p>
+    </div>
+
+    <!-- Add Expense Form -->
+    <form action="/add-expense" method="post" class="my-4">
+      <input type="text" name="name" placeholder="Expense name (optional)" class="border p-2 rounded">
+      <input type="number" name="amount" placeholder="Expense amount" class="border p-2 rounded" required>
+      <button type="submit" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded">
+        Add Expense
+      </button>
+    </form>
+
+    <!-- Update Budget Form -->
+    <form action="/update-budget" method="post" class="mb-4">
+      <input type="number" name="budget" placeholder="Set Budget" class="border p-2 rounded">
+      <button type="submit" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
+        Set Budget
+      </button>
+    </form>
+
+    <a href="/history" class="text-blue-500">View History</a>
+  </div>
+</body>
+
+</html>

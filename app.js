@@ -5,6 +5,8 @@ const path = require('path');
 const cookieParser = require('cookie-parser');
 const logger = require('morgan');
 const mongoose = require('mongoose');
+const Expenses = require('./models/expense');
+const Budget = require('./models/budget');
 
 const engine = require('ejs-mate');
 const indexRouter = require('./routes/index');
@@ -23,6 +25,19 @@ async function main() {
   await mongoose.connect(mongoDB);
 }
 
+// Middleware to fetch common data
+async function fetchData(req, res, next) {
+  try {
+    const latestBudget = await Budget.findOne().sort({ date: -1 });
+    const expenses = await Expenses.find({}).sort({ date: -1 });
+    req.latestBudget = latestBudget;
+    req.expenses = expenses;
+    next();
+  } catch (error) {
+    res.status(500).send(error);
+  }
+}
+
 // view engine setup
 app.engine('ejs', engine);
 app.set('view engine', 'ejs');
@@ -32,6 +47,7 @@ app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
+app.use(fetchData);
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/mdi', express.static(`${__dirname}/node_modules/@mdi/font`));
 
