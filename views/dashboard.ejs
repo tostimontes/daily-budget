@@ -6,12 +6,22 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Dashboard</title>
   <link rel='stylesheet' href='/stylesheets/output.css' />
+  <link href="/mdi/css/materialdesignicons.min.css" rel="stylesheet">
 </head>
 
 <body class="bg-gray-100">
+  <header class="flex justify-between items-center py-4 px-4">
+    <h1 class="text-xl font-bold">Expense Tracker Dashboard</h1>
+    <div>
+      <a href="/settings" class="mdi mdiCog bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mr-2 ">
+        Settings
+      </a>
+      <a href="/logout" class="mdi mdiLogout bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded ">
+        Logout
+      </a>
+    </div>
+  </header>
   <div class="container mx-auto px-4">
-    <h1 class="text-xl font-bold my-4">Expense Tracker Dashboard</h1>
-
     <!-- Display Budget and Expenses -->
     <div>
       <p class="font-bold">

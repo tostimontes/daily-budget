@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard</title>
+  <link rel='stylesheet' href='/stylesheets/output.css' />
+  <link href="/mdi/css/materialdesignicons.min.css" rel="stylesheet">
+</head>
+
+<body class="bg-gray-100">
+  <div class="container mx-auto px-4">
+    <h1 class="text-xl font-bold my-4">User Settings</h1>
+
+    <!-- User Information -->
+    <div class="bg-white p-4 rounded-lg shadow mb-4">
+      <h2 class="text-lg font-semibold">User Information</h2>
+      <p>Logged in as: <%= user.displayName %></p>
+      <p>Email: <%= user.email %></p>
+    </div>
+
+
+    <!-- Settings Form -->
+    <form action="/settings" method="post" class="bg-white p-4 rounded-lg shadow">
+      <div class="mb-4">
+        <label for="currency" class="block text-gray-700 text-sm font-bold mb-2">Currency:</label>
+        <select name="currency" id="currency" class="shadow border rounded py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+          <option value="EUR" <%= preferences.currency === 'EUR' ? 'selected' : '' %>>EUR</option>
+          <option value="USD" <%= preferences.currency === 'USD' ? 'selected' : '' %>>USD</option>
+          <!-- Add more currencies as needed -->
+        </select>
+      </div>
+
+      <div class="mb-4">
+        <label for="notificationTime" class="block text-gray-700 text-sm font-bold mb-2">Notification Time:</label>
+        <input type="time" id="notificationTime" name="notificationTime" value="<%= preferences.notificationTime %>" class="shadow border rounded py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+      </div>
+
+      <div class="mb-6">
+        <label for="budgetThreshold" class="block text-gray-700 text-sm font-bold mb-2">Budget Threshold:</label>
+        <input type="number" id="budgetThreshold" name="budgetThreshold" value="<%= preferences.budgetThreshold %>" class="shadow border rounded py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
+      </div>
+
+      <button type="submit" class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+        Save Settings
+      </button>
+    </form>
+    <a href="/" class="text-blue-500">Back to Dashboard</a>
+  </div>
+</body>
+
+</html>

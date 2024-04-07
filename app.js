@@ -5,8 +5,13 @@ const path = require('path');
 const cookieParser = require('cookie-parser');
 const logger = require('morgan');
 const mongoose = require('mongoose');
+const passport = require('passport');
+const session = require('express-session');
+const GoogleStrategy = require('passport-google-oauth20').Strategy;
+
 const Expenses = require('./models/expense');
 const Budget = require('./models/budget');
+const User = require('./models/user'); // Import the User model
 
 const engine = require('ejs-mate');
 const indexRouter = require('./routes/index');
@@ -27,16 +32,64 @@ async function main() {
 
 // Middleware to fetch common data
 async function fetchData(req, res, next) {
-  try {
-    const latestBudget = await Budget.findOne().sort({ date: -1 });
-    const expenses = await Expenses.find({}).sort({ date: -1 });
-    req.latestBudget = latestBudget;
-    req.expenses = expenses;
-    next();
-  } catch (error) {
-    res.status(500).send(error);
+  if (req.user) {
+    try {
+      const latestBudget = await Budget.findOne({ user: req.user._id }).sort({
+        date: -1,
+      });
+      const expenses = await Expenses.find({ user: req.user._id }).sort({
+        date: -1,
+      });
+
+      req.latestBudget = latestBudget;
+      req.expenses = expenses;
+    } catch (error) {
+      res.status(500).send(error);
+    }
   }
+  next();
 }
+
+// Passport Google OAuth setup
+passport.use(new GoogleStrategy({
+  clientID: process.env.GOOGLE_CLIENT_ID,
+  clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+  callbackURL: "http://localhost:3000/auth/google/callback" // Adjust for production
+}, async (accessToken, refreshToken, profile, done) => {
+  // Here you will handle user profile data, find or create a user in your database
+   const existingUser = await User.findOne({ googleId: profile.id });
+
+  if (existingUser) {
+    return done(null, existingUser);
+  }
+
+  const newUser = await new User({
+    googleId: profile.id,
+    displayName: profile.displayName,
+    email: profile.emails[0].value // Assuming the user has an email
+  }).save();
+
+  done(null, newUser);
+}));
+
+passport.serializeUser((user, done) => done(null, user.id));
+
+passport.deserializeUser(async (id, done) => {
+  const user = await User.findById(id);
+  done(null, user);
+});
+
+// Express session setup
+app.use(session({
+  secret: process.env.SESSION_SECRET,
+  resave: false,
+  saveUninitialized: true
+}));
+
+app.use(passport.initialize());
+app.use(passport.session());
+
+
 
 // view engine setup
 app.engine('ejs', engine);
