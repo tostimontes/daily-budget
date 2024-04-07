@@ -1,105 +1,224 @@
 const express = require('express');
+const passport = require('passport');
 
 const router = express.Router();
+const { DateTime } = require('luxon');
 
 const Expenses = require('../models/expense');
 const Budget = require('../models/budget');
-
-/* GET home page. */
-// router.get('/', function (req, res, next) {
-//   res.render('index', { title: 'Daily Budget' });
-// });
+const UserPreferences = require('../models/userPreferences');
+const User = require('../models/user');
 
 // Routes
 // Dashboard Route
 router.get('/', async (req, res, next) => {
-  const { latestBudget, expenses } = req;
+  if (!req.user) {
+    // User is not logged in, render the homepage
+    res.render('homepage');
+  } else {
+    try {
+      const { latestBudget, expenses } = req;
 
-  // Calculate total ongoing expenses
-  const totalExpenses = expenses.reduce((acc, exp) => acc + exp.amount, 0);
+      // Calculate total ongoing expenses
+      const totalExpenses = expenses.reduce((acc, exp) => acc + exp.amount, 0);
 
-  // Calculate remaining days in the month and days passed
-  const today = new Date();
-  const month = new Date(today.getFullYear(), today.getMonth()).toLocaleString(
-    'default',
-    { month: 'long' }
-  );
-  const daysInMonth = new Date(
-    today.getFullYear(),
-    today.getMonth() + 1,
-    0
-  ).getDate();
-  const daysPassed = today.getDate();
-  const daysRemaining = daysInMonth - daysPassed;
-  
-  // Calculate the recommended average daily expense
-  const averageDailyBudget = latestBudget
-    ? latestBudget.totalBudget / daysInMonth
-    : 0;
+      // Calculate remaining days in the month and days passed
+      const today = new Date();
+      const month = new Date(
+        today.getFullYear(),
+        today.getMonth()
+      ).toLocaleString('default', { month: 'long' });
+      const daysInMonth = new Date(
+        today.getFullYear(),
+        today.getMonth() + 1,
+        0
+      ).getDate();
+      const daysPassed = today.getDate();
+      const daysRemaining = daysInMonth - daysPassed;
 
-  // Calculate remaining budget
-  const remainingBudget = latestBudget
-    ? latestBudget.totalBudget - totalExpenses
-    : 0;
+      // Calculate the recommended average daily expense
+      const averageDailyBudget = latestBudget
+        ? latestBudget.totalBudget / daysInMonth
+        : 0;
 
+      // Calculate remaining budget
+      const remainingBudget = latestBudget
+        ? latestBudget.totalBudget - totalExpenses
+        : 0;
 
-  // Calculate remaining budget per day and ongoing expenses per day
-  const remainingBudgetPerDay =
-    daysRemaining > 0 ? remainingBudget / daysRemaining : 0;
-  const ongoingExpensesPerDay = daysPassed > 0 ? totalExpenses / daysPassed : 0;
+      // Calculate remaining budget per day and ongoing expenses per day
+      const remainingBudgetPerDay =
+        daysRemaining > 0 ? remainingBudget / daysRemaining : 0;
+      const ongoingExpensesPerDay =
+        daysPassed > 0 ? totalExpenses / daysPassed : 0;
 
-  res.render('dashboard', {
-    month: month,
-    budget: latestBudget,
-    expenses: expenses,
-    averageDailyBudget,
-    remainingBudget,
-    remainingBudgetPerDay,
-    ongoingExpensesPerDay,
-    date: today.toDateString(),
-  });
+      const userId = req.user._id; // Replace with your method of getting the current user
+      const preferences = (await UserPreferences.findOne({ userId })) || {};
+
+      res.render('dashboard', {
+        month: month,
+        budget: latestBudget,
+        expenses: expenses,
+        averageDailyBudget,
+        remainingBudget,
+        remainingBudgetPerDay,
+        ongoingExpensesPerDay,
+        date: today.toDateString(),
+        preferences, // Pass preferences to the dashboard
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+});
+
+router.get('/settings', async (req, res) => {
+  try {
+    if (!req.user) {
+      res.redirect('/'); // or redirect to login
+      return;
+    }
+
+    const userId = req.user._id;
+    const preferences = (await UserPreferences.findOne({ userId })) || {};
+
+    res.render('settings', {
+      preferences,
+      user: req.user, // Pass the user data to the template
+    });
+  } catch (error) {
+    console.error('Error loading settings:', error);
+    res.status(500).send('Unable to load settings.');
+  }
+});
+
+router.post('/settings', async (req, res) => {
+  try {
+    const userId = req.user._id; // Replace with your method of getting the current user
+    const { currency, notificationTime, budgetThreshold } = req.body;
+    await UserPreferences.findOneAndUpdate(
+      { userId },
+      { currency, notificationTime, budgetThreshold },
+      { upsert: true }
+    );
+    res.redirect('/settings');
+  } catch (error) {
+    res.status(500).send(error);
+  }
 });
 
 // History Route
 router.get('/history', async (req, res, next) => {
-  const { expenses } = req;
-  res.render('history', { expenses: expenses, expenseToEdit: null });
+  if (!req.user) {
+    res.redirect('/');
+    return;
+  }
+
+  const expenses = await Expenses.find({ user: req.user._id }).sort({
+    date: -1,
+  });
+
+  let monthlyExpenses = {};
+  expenses.forEach((exp) => {
+    const monthYear = DateTime.fromJSDate(exp.date).toFormat('MMMM yyyy');
+    if (!monthlyExpenses[monthYear]) {
+      monthlyExpenses[monthYear] = [];
+    }
+    monthlyExpenses[monthYear].push(exp);
+  });
+
+  res.render('history', { monthlyExpenses, expenseToEdit: null });
 });
 
 // Add Expense Route
-router.post('/add-expense', async (req, res, next) => {
+router.post('/add-expense', async (req, res) => {
   const { name, amount } = req.body;
-  const newExpense = new Expenses({ name, amount });
+  const newExpense = new Expenses({
+    name,
+    amount,
+    user: req.user._id, // Save user ID with the expense
+  });
   await newExpense.save();
   res.redirect('/');
 });
-
 // Update Budget Route
-router.post('/update-budget', async (req, res, next) => {
-  const newBudget = new Budget({ totalBudget: req.body.budget });
-  await newBudget.save();
-  res.redirect('/');
+router.post('/update-budget', async (req, res) => {
+  try {
+    const { budget } = req.body;
+
+    // Create a new budget or update the existing one for the logged-in user
+    const latestBudget = await Budget.findOneAndUpdate(
+      { user: req.user._id }, // Find the latest budget for this user
+      { totalBudget: budget, user: req.user._id }, // Update the budget value and confirm the user
+      { new: true, upsert: true } // Options to create a new one if it doesn't exist
+    );
+
+    res.redirect('/');
+  } catch (error) {
+    console.error('Error updating budget:', error);
+    res.status(500).send('Unable to update budget.');
+  }
 });
 
 // Edit Expense Route
 router.get('/history/edit-expense/:id', async (req, res, next) => {
   try {
-    const expenseToEdit = await Expenses.findById(req.params.id);
-    const expenses = await Expenses.find({}).sort({ date: -1 }); // Fetch all expenses for history view
+    const expenseToEdit = await Expenses.findOne({
+      _id: req.params.id,
+      user: req.user._id,
+    });
+    const expenses = await Expenses.find({ user: req.user._id }).sort({
+      date: -1,
+    });
+
     if (!expenseToEdit) {
-      return res.status(404).send('Expense not found');
+      return res.status(404).send('Expense not found or access denied');
     }
-    res.render('history', { expenses, expenseToEdit });
+
+    let monthlyExpenses = {};
+    expenses.forEach((exp) => {
+      const monthYear = DateTime.fromJSDate(exp.date).toFormat('MMMM yyyy');
+      if (!monthlyExpenses[monthYear]) {
+        monthlyExpenses[monthYear] = [];
+      }
+      monthlyExpenses[monthYear].push(exp);
+    });
+
+    res.render('history', { monthlyExpenses, expenseToEdit });
   } catch (error) {
     next(error);
   }
 });
+
+router.get('/get-expense/:id', async (req, res, next) => {
+  try {
+    const expense = await Expenses.findById(req.params.id);
+    if (!expense) {
+      return res.status(404).send('Expense not found');
+    }
+    res.json(expense);
+  } catch (error) {
+    res.status(500).send('Server error');
+  }
+});
+
 // Update Expense POST route
 router.post('/update-expense/:id', async (req, res, next) => {
   try {
     const { amount } = req.body;
-    await Expenses.findByIdAndUpdate(req.params.id, { amount });
-    res.redirect('/');
+    const expense = await Expenses.findOne({
+      _id: req.params.id,
+      user: req.user._id,
+    });
+
+    if (!expense) {
+      return res.status(404).send('Expense not found or access denied');
+    }
+
+    expense.amount = amount;
+    await expense.save();
+
+    res.redirect('/history');
   } catch (error) {
     next(error);
   }
@@ -107,9 +226,33 @@ router.post('/update-expense/:id', async (req, res, next) => {
 
 // Delete Expense Route
 router.get('/delete-expense/:id', async (req, res, next) => {
-  // Delete the expense by ID and redirect
-  await Expenses.findByIdAndDelete(req.params.id);
+  await Expenses.findOneAndDelete({ _id: req.params.id, user: req.user._id });
   res.redirect('/history');
+});
+
+router.get(
+  '/auth/google',
+  passport.authenticate('google', { scope: ['profile', 'email'] })
+);
+
+router.get(
+  '/auth/google/callback',
+  passport.authenticate('google', { failureRedirect: '/login' }),
+  (req, res) => {
+    // Successful authentication, redirect home.
+    res.redirect('/');
+  }
+);
+
+router.get('/logout', (req, res) => {
+  req.logout(function (err) {
+    if (err) {
+      // Handle error
+      console.log(err);
+      return res.status(500).send('Error during logout');
+    }
+    res.redirect('/');
+  });
 });
 
 module.exports = router;

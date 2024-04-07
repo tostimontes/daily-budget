@@ -37,7 +37,7 @@ gulp.task('css', function () {
 
 gulp.task('browserSync', function () {
   browserSync.init({
-    proxy: 'http://localhost:3000',
+    proxy: 'http://192.168.18.102:3000',
     port: 5000,
     open: true,
     notify: false,

@@ -7,44 +7,104 @@
   <title>Expense History</title>
   <link rel='stylesheet' href='/stylesheets/output.css' />
   <link href="/mdi/css/materialdesignicons.min.css" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/luxon/1.28.0/luxon.min.js"></script>
 </head>
 
-<body class="bg-gray-100">
+<body>
   <div class="container mx-auto px-4">
     <h1 class="text-xl font-bold my-4">Expense History</h1>
 
-    <!-- Display History of Expenses -->
-    <ul>
-      <% expenses.forEach(exp => { %>
-      <li class="flex items-center">
-        <span>
-          <%= exp.name ? exp.name + ': ' : '' %><%= exp.amount %>€, <%= exp.date.toDateString() %>
-        </span>
-        <span>
-          <a href="/history/edit-expense/<%= exp._id %>" class="mdi mdi-pencil-outline">Edit</a>
-          <a href="/delete-expense/<%= exp._id %>" class="mdi mdi-delete-outline">Delete</a>
-        </span>
-      </li>
+    <!-- Tabs for Each Month -->
+    <div class="tabs flex">
+      <% Object.keys(monthlyExpenses).forEach(month => { %>
+      <button class="tab py-2 px-4 bg-white rounded-t-lg border border-gray-300 hover:bg-gray-100" onclick="showMonth('<%= month.replace(/\s+/g, '') %>')">
+        <%= month %>
+      </button>
       <% }) %>
-    </ul>
+    </div>
+
+
+    <!-- Expenses for Each Month -->
+    <% Object.keys(monthlyExpenses).forEach(month => { %>
+    <div id="<%= month.replace(/\s+/g, '') %>" class="tab-content" style="display: none;">
+      <table class="min-w-full bg-white">
+        <tbody>
+          <% monthlyExpenses[month].forEach((exp, index) => { %>
+          <tr class="<%= index % 2 === 0 ? 'bg-gray-100' : 'bg-white' %>">
+            <td class="px-6 py-4"><%= new Date(exp.date).toLocaleDateString('en-GB', { year: '2-digit', month: '2-digit', day: '2-digit' }) %></td>
+            <td class="px-6 py-4"><%= exp.amount %>€ <%= exp.name ? '(' + exp.name + ')' : '' %></td>
+            <td class="px-6 py-4">
+              <a href="javascript:void(0);" onclick="showEditModal('<%= exp._id %>')" class="mdi mdi-pencil-outline text-blue-500">Edit</a>
+              <a href="javascript:void(0);" onclick="showDeleteModal('/delete-expense/<%= exp._id %>')" class="mdi mdi-delete-outline text-red-500 ml-2">Delete</a>
+            </td>
+          </tr>
+          <% }) %>
+        </tbody>
+      </table>
+    </div>
+    <% }) %>
+
 
     <a href="/" class="text-blue-500">Back to Dashboard</a>
   </div>
 
-  <% if (expenseToEdit) { %>
-  <div id="editModal" class="modal">
-    <div class="modal-content">
-      <span class="close-button">&times;</span>
-      <form action="/update-expense/<%= expenseToEdit._id %>" method="post">
-        <input type="number" name="amount" value="<%= expenseToEdit.amount %>" required>
-        <button type="submit">Update Expense</button>
+  <div id="editModal" class="modal" style="display: none;">
+    <div class="modal-content bg-white p-4 rounded-lg shadow-lg">
+      <form action="" method="post" class="text-center">
+        <input type="number" name="amount" value="" required class="w-4/5 mt-4 p-2 border rounded text-center">
+        <span class="close-button text-5xl cursor-pointer ">&times;</span>
+        <button type="submit" class="bg-green-500 text-white rounded py-2 px-4 mt-4 w-full">Update Expense</button>
       </form>
     </div>
   </div>
-  <% } %>
+
+  <div id="deleteModal" class="modal hidden">
+    <div class="modal-content bg-white p-4 rounded-lg shadow-lg text-center">
+      <p class="mb-4">Are you sure you want to delete this expense?</p>
+      <button onclick="confirmDelete()" class="bg-red-500 text-white rounded py-2 px-4 w-full mb-2">Confirm Delete</button>
+      <button onclick="closeDeleteModal()" class="bg-gray-300 text-black rounded py-2 px-4 w-full">Cancel</button>
+    </div>
+  </div>
+
 
   <script>
-    // JavaScript to handle modal opening and closing
+    function showMonth(monthId) {
+      // Update tabs' active state
+      document.querySelectorAll('.tab').forEach(tab => {
+        tab.classList.remove('bg-gray-200'); // The color for active tab
+        if (tab.getAttribute('onclick').includes(monthId)) {
+          tab.classList.add('bg-gray-200'); // The color for active tab
+        }
+      });
+
+      // Hide all tab contents
+      document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
+      // Show the selected month's expenses
+      document.getElementById(monthId).style.display = 'block';
+    }
+
+    function showEditModal(expenseId) {
+      // Show the edit modal
+      const modal = document.getElementById('editModal');
+      if (modal) {
+        // Fetch the expense data
+        fetch(`/get-expense/${expenseId}`)
+          .then(response => response.json())
+          .then(data => {
+            // Populate the modal fields
+            modal.querySelector('input[name="amount"]').value = data.amount;
+            modal.querySelector('form').action = `/update-expense/${data._id}`;
+            // Show the modal
+            modal.style.display = 'block';
+          })
+          .catch(error => console.error('Error fetching expense:', error));
+      } // Update form action to include the expense ID
+      modal.querySelector('form').action = `/update-expense/${expenseId}`;
+      modal.style.display = 'block';
+    }
+    // You can also fetch expense details here if needed
+
+    // Close the modal
     if (document.getElementById('editModal')) {
       const modal = document.getElementById('editModal');
       const closeButton = document.querySelector('.close-button');
@@ -56,6 +116,25 @@
           modal.style.display = 'none';
         }
       });
+    }
+
+    // Show the current month's expenses by default
+    const currentMonthId = luxon.DateTime.now().toFormat('MMMM yyyy').replace(/\s+/g, '');
+    showMonth(currentMonthId);
+
+    let deleteUrl = '';
+
+    function showDeleteModal(url) {
+      deleteUrl = url;
+      document.getElementById('deleteModal').style.display = 'block';
+    }
+
+    function closeDeleteModal() {
+      document.getElementById('deleteModal').style.display = 'none';
+    }
+
+    function confirmDelete() {
+      window.location.href = deleteUrl;
     }
   </script>
 </body>
