@@ -5,7 +5,7 @@ const { DateTime } = require('luxon');
 const { Schema } = mongoose;
 
 const userSchema = new mongoose.Schema({
-  googleId: String,
+  clerkId: String, // Unique identifier from Clerk
   displayName: String,
   email: String,
   // Add any other fields you find necessary

@@ -3,6 +3,7 @@ const express = require('express');
 
 const router = express.Router();
 const { DateTime } = require('luxon');
+const { ensureUser } = require('../middleware/auth');
 
 const Expenses = require('../models/expense');
 const Budget = require('../models/budget');
