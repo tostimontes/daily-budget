@@ -1,6 +1,6 @@
 // middlewares/auth.js
 const User = require('../models/user');
-const { Clerk } = require('@clerk/clerk-sdk-node');
+const { Clerk } = require('@clerk/clerk-js');
 const clerkBackend = new Clerk(process.env.CLERK_SECRET_KEY);
 
 async function ensureUser(req, res, next) {

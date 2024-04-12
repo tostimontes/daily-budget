@@ -8,7 +8,7 @@ const mongoose = require('mongoose');
 // const passport = require('passport');
 // const session = require('express-session');
 // const GoogleStrategy = require('passport-google-oauth20').Strategy;
-const { Clerk } = require('@clerk/clerk-sdk-node');
+const { Clerk } = require('@clerk/clerk-js');
 const clerkBackend = new Clerk(process.env.CLERK_SECRET_KEY);
 const { ensureUser } = require('./middleware/auth');
 
