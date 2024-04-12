@@ -8,6 +8,9 @@ const mongoose = require('mongoose');
 // const passport = require('passport');
 // const session = require('express-session');
 // const GoogleStrategy = require('passport-google-oauth20').Strategy;
+const { Clerk } = require('@clerk/clerk-sdk-node');
+const clerkBackend = new Clerk(process.env.CLERK_SECRET_KEY);
+const { ensureUser } = require('./middleware/auth');
 
 const Expenses = require('./models/expense');
 const Budget = require('./models/budget');
@@ -95,13 +98,12 @@ async function fetchData(req, res, next) {
 // app.use(passport.initialize());
 // app.use(passport.session());
 
-
-
 // view engine setup
 app.engine('ejs', engine);
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'views'));
 
+app.use(ensureUser);
 app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));

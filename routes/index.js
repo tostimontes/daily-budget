@@ -3,6 +3,7 @@ const express = require('express');
 
 const router = express.Router();
 const { DateTime } = require('luxon');
+const { ensureUser } = require('../middleware/auth');
 
 const Expenses = require('../models/expense');
 const Budget = require('../models/budget');
@@ -11,7 +12,7 @@ const User = require('../models/user');
 
 // Routes
 // Dashboard Route
-router.get('/', async (req, res, next) => {
+router.get('/', ensureUser, async (req, res, next) => {
   if (!req.user) {
     // User is not logged in, render the homepage
     res.redirect('https://known-ibex-41.accounts.dev/sign-in');
@@ -72,7 +73,7 @@ router.get('/', async (req, res, next) => {
   }
 });
 
-router.get('/settings', async (req, res) => {
+router.get('/settings', ensureUser, async (req, res) => {
   try {
     if (!req.user) {
       res.redirect('/'); // or redirect to login
@@ -92,7 +93,7 @@ router.get('/settings', async (req, res) => {
   }
 });
 
-router.post('/settings', async (req, res) => {
+router.post('/settings', ensureUser, async (req, res) => {
   try {
     const userId = req.user._id; // Replace with your method of getting the current user
     const { currency, notificationTime, budgetThreshold } = req.body;
@@ -108,7 +109,7 @@ router.post('/settings', async (req, res) => {
 });
 
 // History Route
-router.get('/history', async (req, res, next) => {
+router.get('/history', ensureUser, async (req, res, next) => {
   if (!req.user) {
     res.redirect('/');
     return;
@@ -131,7 +132,7 @@ router.get('/history', async (req, res, next) => {
 });
 
 // Add Expense Route
-router.post('/add-expense', async (req, res) => {
+router.post('/add-expense', ensureUser, async (req, res) => {
   const { name, amount } = req.body;
   const newExpense = new Expenses({
     name,
@@ -142,7 +143,7 @@ router.post('/add-expense', async (req, res) => {
   res.redirect('/');
 });
 // Update Budget Route
-router.post('/update-budget', async (req, res) => {
+router.post('/update-budget', ensureUser, async (req, res) => {
   try {
     const { budget } = req.body;
 
@@ -161,7 +162,7 @@ router.post('/update-budget', async (req, res) => {
 });
 
 // Edit Expense Route
-router.get('/history/edit-expense/:id', async (req, res, next) => {
+router.get('/history/edit-expense/:id', ensureUser, async (req, res, next) => {
   try {
     const expenseToEdit = await Expenses.findOne({
       _id: req.params.id,
@@ -190,7 +191,7 @@ router.get('/history/edit-expense/:id', async (req, res, next) => {
   }
 });
 
-router.get('/get-expense/:id', async (req, res, next) => {
+router.get('/get-expense/:id', ensureUser, async (req, res, next) => {
   try {
     const expense = await Expenses.findById(req.params.id);
     if (!expense) {
@@ -203,7 +204,7 @@ router.get('/get-expense/:id', async (req, res, next) => {
 });
 
 // Update Expense POST route
-router.post('/update-expense/:id', async (req, res, next) => {
+router.post('/update-expense/:id', ensureUser, async (req, res, next) => {
   try {
     const { amount } = req.body;
     const expense = await Expenses.findOne({
@@ -225,7 +226,7 @@ router.post('/update-expense/:id', async (req, res, next) => {
 });
 
 // Delete Expense Route
-router.get('/delete-expense/:id', async (req, res, next) => {
+router.get('/delete-expense/:id', ensureUser, async (req, res, next) => {
   await Expenses.findOneAndDelete({ _id: req.params.id, user: req.user._id });
   res.redirect('/history');
 });
