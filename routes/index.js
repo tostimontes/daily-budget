@@ -14,7 +14,6 @@ const User = require('../models/user');
 // Dashboard Route
 router.get('/', ensureUser, async (req, res, next) => {
   if (!req.user) {
-    // User is not logged in, render the homepage
     res.redirect('https://known-ibex-41.accounts.dev/sign-in');
   } else {
     try {
