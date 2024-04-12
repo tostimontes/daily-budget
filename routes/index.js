@@ -1,5 +1,5 @@
 const express = require('express');
-const passport = require('passport');
+// const passport = require('passport');
 
 const router = express.Router();
 const { DateTime } = require('luxon');
@@ -14,7 +14,7 @@ const User = require('../models/user');
 router.get('/', async (req, res, next) => {
   if (!req.user) {
     // User is not logged in, render the homepage
-    res.render('homepage');
+    res.redirect('https://known-ibex-41.accounts.dev/sign-in');
   } else {
     try {
       const { latestBudget, expenses } = req;
@@ -230,29 +230,29 @@ router.get('/delete-expense/:id', async (req, res, next) => {
   res.redirect('/history');
 });
 
-router.get(
-  '/auth/google',
-  passport.authenticate('google', { scope: ['profile', 'email'] })
-);
+// router.get(
+//   '/auth/google',
+//   passport.authenticate('google', { scope: ['profile', 'email'] })
+// );
 
-router.get(
-  '/auth/google/callback',
-  passport.authenticate('google', { failureRedirect: '/login' }),
-  (req, res) => {
-    // Successful authentication, redirect home.
-    res.redirect('/');
-  }
-);
+// router.get(
+//   '/auth/google/callback',
+//   passport.authenticate('google', { failureRedirect: '/login' }),
+//   (req, res) => {
+//     // Successful authentication, redirect home.
+//     res.redirect('/');
+//   }
+// );
 
-router.get('/logout', (req, res) => {
-  req.logout(function (err) {
-    if (err) {
-      // Handle error
-      console.log(err);
-      return res.status(500).send('Error during logout');
-    }
-    res.redirect('/');
-  });
-});
+// router.get('/logout', (req, res) => {
+//   req.logout(function (err) {
+//     if (err) {
+//       // Handle error
+//       console.log(err);
+//       return res.status(500).send('Error during logout');
+//     }
+//     res.redirect('/');
+//   });
+// });
 
 module.exports = router;

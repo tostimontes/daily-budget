@@ -5,9 +5,9 @@ const path = require('path');
 const cookieParser = require('cookie-parser');
 const logger = require('morgan');
 const mongoose = require('mongoose');
-const passport = require('passport');
-const session = require('express-session');
-const GoogleStrategy = require('passport-google-oauth20').Strategy;
+// const passport = require('passport');
+// const session = require('express-session');
+// const GoogleStrategy = require('passport-google-oauth20').Strategy;
 
 const Expenses = require('./models/expense');
 const Budget = require('./models/budget');
@@ -51,49 +51,49 @@ async function fetchData(req, res, next) {
 }
 
 // Passport Google OAuth setup
-passport.use(
-  new GoogleStrategy(
-    {
-      clientID: process.env.GOOGLE_CLIENT_ID,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-      callbackURL:
-        'http://https://daily-budget.up.railway.app/auth/google/callback', // Adjust for production
-    },
-    async (accessToken, refreshToken, profile, done) => {
-      // Here you will handle user profile data, find or create a user in your database
-      const existingUser = await User.findOne({ googleId: profile.id });
+// passport.use(
+//   new GoogleStrategy(
+//     {
+//       clientID: process.env.GOOGLE_CLIENT_ID,
+//       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+//       callbackURL:
+//         'http://https://daily-budget.up.railway.app/auth/google/callback', // Adjust for production
+//     },
+//     async (accessToken, refreshToken, profile, done) => {
+//       // Here you will handle user profile data, find or create a user in your database
+//       const existingUser = await User.findOne({ googleId: profile.id });
 
-      if (existingUser) {
-        return done(null, existingUser);
-      }
+//       if (existingUser) {
+//         return done(null, existingUser);
+//       }
 
-      const newUser = await new User({
-        googleId: profile.id,
-        displayName: profile.displayName,
-        email: profile.emails[0].value, // Assuming the user has an email
-      }).save();
+//       const newUser = await new User({
+//         googleId: profile.id,
+//         displayName: profile.displayName,
+//         email: profile.emails[0].value, // Assuming the user has an email
+//       }).save();
 
-      done(null, newUser);
-    }
-  )
-);
+//       done(null, newUser);
+//     }
+//   )
+// );
 
-passport.serializeUser((user, done) => done(null, user.id));
+// passport.serializeUser((user, done) => done(null, user.id));
 
-passport.deserializeUser(async (id, done) => {
-  const user = await User.findById(id);
-  done(null, user);
-});
+// passport.deserializeUser(async (id, done) => {
+//   const user = await User.findById(id);
+//   done(null, user);
+// });
 
 // Express session setup
-app.use(session({
-  secret: process.env.SESSION_SECRET,
-  resave: false,
-  saveUninitialized: true
-}));
+// app.use(session({
+//   secret: process.env.SESSION_SECRET,
+//   resave: false,
+//   saveUninitialized: true
+// }));
 
-app.use(passport.initialize());
-app.use(passport.session());
+// app.use(passport.initialize());
+// app.use(passport.session());
 
 
 
