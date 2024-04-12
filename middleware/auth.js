@@ -5,28 +5,31 @@ const clerkBackend = new Clerk(process.env.CLERK_SECRET_KEY);
 
 async function ensureUser(req, res, next) {
   try {
-    const sessionToken = req.cookies.__session; // Assumes your session token is stored in a cookie
+    const sessionToken = req.cookies.__session;
+    if (!sessionToken) {
+      return res.redirect('https://known-ibex-41.accounts.dev/sign-in');
+    }
+
     const session = await clerkBackend.sessions.verifySession(sessionToken);
+    req.user = await User.findOne({ clerkId: session.userId });
 
-    const clerkUser = await clerkBackend.users.getUser(session.userId);
-    let user = await User.findOne({ clerkId: clerkUser.id });
-
-    if (!user) {
-      user = new User({
+    if (!req.user) {
+      // If user data is not found in your DB, fetch from Clerk and create/update as necessary
+      const clerkUser = await clerkBackend.users.getUser(session.userId);
+      req.user = new User({
         clerkId: clerkUser.id,
         displayName: clerkUser.firstName + ' ' + clerkUser.lastName,
         email: clerkUser.emailAddresses[0].emailAddress,
       });
-      await user.save();
+      await req.user.save();
     }
-
-    req.user = user;
     next();
   } catch (error) {
-    // Redirect to Clerk sign-in instead of sending an error
-    res.redirect('https://known-ibex-41.accounts.dev/sign-in');
+    console.error('Authentication error:', error);
+    res.status(401).send('Authentication required');
   }
 }
+
 
 
 module.exports = { ensureUser };
