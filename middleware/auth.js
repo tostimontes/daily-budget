@@ -7,6 +7,7 @@ async function ensureUser(req, res, next) {
   console.log('Entering ensureUser middleware');
   try {
     const sessionToken = req.cookies.__session;
+    console.log('Cookies:', req.cookies);
     if (!sessionToken) {
       throw new Error('No session token provided');
     }
@@ -33,7 +34,8 @@ async function ensureUser(req, res, next) {
     next();
   } catch (error) {
     console.error('Authentication error:', error);
-    res.status(401).send('Authentication required');
+    res.redirect('https://accounts.dailybudget.es/sign-in');
+    // res.status(401).send('Authentication required');
   }
 }
 
