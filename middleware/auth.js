@@ -8,6 +8,7 @@ async function ensureUser(req, res, next) {
   try {
     const sessionToken = req.cookies.__session;
     console.log('Cookies:', req.cookies);
+    console.log('Headers: ', req.headers);
     if (!sessionToken) {
       throw new Error('No session token provided');
     }
@@ -34,7 +35,7 @@ async function ensureUser(req, res, next) {
     next();
   } catch (error) {
     console.error('Authentication error:', error);
-    res.redirect('https://accounts.dailybudget.es/sign-in');
+    res.redirect('/');
     // res.status(401).send('Authentication required');
   }
 }
