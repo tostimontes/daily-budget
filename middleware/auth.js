@@ -4,11 +4,13 @@ const { Clerk } = require('@clerk/clerk-sdk-node');
 const clerkBackend = new Clerk(process.env.CLERK_SECRET_KEY);
 
 async function ensureUser(req, res, next) {
+  console.log('Entering ensureUser middleware');
   try {
     const sessionToken = req.cookies.__session;
     if (!sessionToken) {
       throw new Error('No session token provided');
     }
+    console.log('Session token found:', sessionToken);
 
     const session = await clerkBackend.sessions.verifySession(sessionToken);
     console.log('Session verified', session);
