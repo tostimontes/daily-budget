@@ -7,29 +7,32 @@ async function ensureUser(req, res, next) {
   try {
     const sessionToken = req.cookies.__session;
     if (!sessionToken) {
-      return res.redirect('https://known-ibex-41.accounts.dev/sign-in');
+      throw new Error('No session token provided');
     }
 
     const session = await clerkBackend.sessions.verifySession(sessionToken);
-    req.user = await User.findOne({ clerkId: session.userId });
+    console.log('Session verified', session);
 
-    if (!req.user) {
-      // If user data is not found in your DB, fetch from Clerk and create/update as necessary
+    let user = await User.findOne({ clerkId: session.userId });
+    if (!user) {
+      console.log('User not found in database, fetching from Clerk');
       const clerkUser = await clerkBackend.users.getUser(session.userId);
-      req.user = new User({
+      console.log('User fetched from Clerk', clerkUser);
+
+      user = new User({
         clerkId: clerkUser.id,
         displayName: clerkUser.firstName + ' ' + clerkUser.lastName,
         email: clerkUser.emailAddresses[0].emailAddress,
       });
-      await req.user.save();
+      await user.save();
     }
+
+    req.user = user;
     next();
   } catch (error) {
     console.error('Authentication error:', error);
     res.status(401).send('Authentication required');
   }
 }
-
-
 
 module.exports = { ensureUser };
