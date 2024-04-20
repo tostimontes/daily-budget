@@ -59,3 +59,7 @@ typings/
 
 # next.js build output
 .next
+
+# files
+dailybudget.es_cloudfare.txt
+dailybudget.es.txt

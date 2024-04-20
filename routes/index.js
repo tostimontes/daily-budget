@@ -3,7 +3,8 @@ const express = require('express');
 
 const router = express.Router();
 const { DateTime } = require('luxon');
-const { ensureUser } = require('../middleware/auth');
+const passport = require('passport');
+const { genPassword } = require('../middleware/passwordUtils'); // Assume you have this utility for hashing passwords
 
 const Expenses = require('../models/expense');
 const Budget = require('../models/budget');
@@ -12,15 +13,26 @@ const User = require('../models/user');
 
 // Routes
 // Dashboard Route
-router.get('/', ensureUser, async (req, res, next) => {
+router.get('/', async (req, res, next) => {
+  console.log(`User: ${req.user}`);
   if (!req.user) {
-    res.redirect('https://known-ibex-41.accounts.dev/sign-in');
+    res.redirect('/login');
   } else {
     try {
-      const { latestBudget, expenses } = req;
+      // Fetch the latest budget and expenses for the logged-in user
+      const latestBudget = await Budget.findOne({ user: req.user._id }).sort({
+        date: -1,
+      });
+      const expenses = await Expenses.find({ user: req.user._id }).sort({
+        date: -1,
+      });
 
-      // Calculate total ongoing expenses
-      const totalExpenses = expenses.reduce((acc, exp) => acc + exp.amount, 0);
+      // If no expenses or budget, set default values
+      const totalExpenses = expenses.reduce(
+        (acc, exp) => acc + exp.amount,
+        0,
+        expenses
+      );
 
       // Calculate remaining days in the month and days passed
       const today = new Date();
@@ -72,7 +84,49 @@ router.get('/', ensureUser, async (req, res, next) => {
   }
 });
 
-router.get('/settings', ensureUser, async (req, res) => {
+// Login Route
+router.get('/login', (req, res) => res.render('login'));
+router.post(
+  '/login',
+  passport.authenticate('local', {
+    successRedirect: '/',
+    failureRedirect: '/login',
+    failureFlash: true,
+  })
+);
+
+router.post('/logout', function (req, res, next) {
+  req.logout(function (err) {
+    if (err) {
+      return next(err);
+    }
+    res.redirect('/');
+  });
+});
+
+// Signup Route
+router.get('/sign-up', (req, res) => res.render('sign-up'));
+router.post('/sign-up', async (req, res) => {
+  const { username, password } = req.body;
+  try {
+    const saltHash = genPassword(password);
+    const salt = saltHash.salt;
+    const hash = saltHash.hash;
+
+    const newUser = new User({
+      username,
+      hash,
+      salt,
+    });
+
+    await newUser.save();
+    res.redirect('/login');
+  } catch (error) {
+    res.redirect('/sign-up');
+  }
+});
+
+router.get('/settings', async (req, res) => {
   try {
     if (!req.user) {
       res.redirect('/'); // or redirect to login
@@ -92,7 +146,7 @@ router.get('/settings', ensureUser, async (req, res) => {
   }
 });
 
-router.post('/settings', ensureUser, async (req, res) => {
+router.post('/settings', async (req, res) => {
   try {
     const userId = req.user._id; // Replace with your method of getting the current user
     const { currency, notificationTime, budgetThreshold } = req.body;
@@ -108,7 +162,7 @@ router.post('/settings', ensureUser, async (req, res) => {
 });
 
 // History Route
-router.get('/history', ensureUser, async (req, res, next) => {
+router.get('/history', async (req, res, next) => {
   if (!req.user) {
     res.redirect('/');
     return;
@@ -131,7 +185,7 @@ router.get('/history', ensureUser, async (req, res, next) => {
 });
 
 // Add Expense Route
-router.post('/add-expense', ensureUser, async (req, res) => {
+router.post('/add-expense', async (req, res) => {
   const { name, amount } = req.body;
   const newExpense = new Expenses({
     name,
@@ -142,7 +196,7 @@ router.post('/add-expense', ensureUser, async (req, res) => {
   res.redirect('/');
 });
 // Update Budget Route
-router.post('/update-budget', ensureUser, async (req, res) => {
+router.post('/update-budget', async (req, res) => {
   try {
     const { budget } = req.body;
 
@@ -161,7 +215,7 @@ router.post('/update-budget', ensureUser, async (req, res) => {
 });
 
 // Edit Expense Route
-router.get('/history/edit-expense/:id', ensureUser, async (req, res, next) => {
+router.get('/history/edit-expense/:id', async (req, res, next) => {
   try {
     const expenseToEdit = await Expenses.findOne({
       _id: req.params.id,
@@ -190,7 +244,7 @@ router.get('/history/edit-expense/:id', ensureUser, async (req, res, next) => {
   }
 });
 
-router.get('/get-expense/:id', ensureUser, async (req, res, next) => {
+router.get('/get-expense/:id', async (req, res, next) => {
   try {
     const expense = await Expenses.findById(req.params.id);
     if (!expense) {
@@ -203,7 +257,7 @@ router.get('/get-expense/:id', ensureUser, async (req, res, next) => {
 });
 
 // Update Expense POST route
-router.post('/update-expense/:id', ensureUser, async (req, res, next) => {
+router.post('/update-expense/:id', async (req, res, next) => {
   try {
     const { amount } = req.body;
     const expense = await Expenses.findOne({
@@ -225,34 +279,9 @@ router.post('/update-expense/:id', ensureUser, async (req, res, next) => {
 });
 
 // Delete Expense Route
-router.get('/delete-expense/:id', ensureUser, async (req, res, next) => {
+router.get('/delete-expense/:id', async (req, res, next) => {
   await Expenses.findOneAndDelete({ _id: req.params.id, user: req.user._id });
   res.redirect('/history');
 });
-
-// router.get(
-//   '/auth/google',
-//   passport.authenticate('google', { scope: ['profile', 'email'] })
-// );
-
-// router.get(
-//   '/auth/google/callback',
-//   passport.authenticate('google', { failureRedirect: '/login' }),
-//   (req, res) => {
-//     // Successful authentication, redirect home.
-//     res.redirect('/');
-//   }
-// );
-
-// router.get('/logout', (req, res) => {
-//   req.logout(function (err) {
-//     if (err) {
-//       // Handle error
-//       console.log(err);
-//       return res.status(500).send('Error during logout');
-//     }
-//     res.redirect('/');
-//   });
-// });
 
 module.exports = router;
