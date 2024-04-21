@@ -6,7 +6,7 @@ const { Schema } = mongoose;
 
 const expenseSchema = new Schema({
   user: { type: Schema.Types.ObjectId, ref: 'User' },
-  name: { type: String, default: null }, // Optional name field
+  name: { type: String, default: null },
   amount: {
     type: Number,
     required: [true, 'An expense needs an amount.'],

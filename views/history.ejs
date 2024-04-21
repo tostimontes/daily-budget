@@ -7,6 +7,7 @@
   <title>Expense History</title>
   <link rel='stylesheet' href='/stylesheets/output.css' />
   <link href="/mdi/css/materialdesignicons.min.css" rel="stylesheet">
+  <link rel="icon" href="/images/logo.ico" type="image/x-icon">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/luxon/1.28.0/luxon.min.js"></script>
 </head>
 
@@ -14,7 +15,6 @@
   <div class="container mx-auto px-4">
     <h1 class="text-xl font-bold my-4">Expense History</h1>
 
-    <!-- Tabs for Each Month -->
     <div class="tabs flex">
       <% Object.keys(monthlyExpenses).forEach(month => { %>
       <button class="tab py-2 px-4 bg-white rounded-t-lg border border-gray-300 hover:bg-gray-100" onclick="showMonth('<%= month.replace(/\s+/g, '') %>')">
@@ -24,7 +24,6 @@
     </div>
 
 
-    <!-- Expenses for Each Month -->
     <% Object.keys(monthlyExpenses).forEach(month => { %>
     <div id="<%= month.replace(/\s+/g, '') %>" class="tab-content" style="display: none;">
       <table class="min-w-full bg-white">
@@ -45,7 +44,7 @@
     <% }) %>
 
 
-    <a href="/" class="text-blue-500">Back to Dashboard</a>
+    <a href="/" class="text-blue-500 text-2xl flex justify-center mt-4"><i class="mdi mdi-keyboard-backspace"></i>Back to Dashboard </a>
   </div>
 
   <div id="editModal" class="modal" style="display: none;">
@@ -69,42 +68,42 @@
 
   <script>
     function showMonth(monthId) {
-      // Update tabs' active state
+
       document.querySelectorAll('.tab').forEach(tab => {
-        tab.classList.remove('bg-gray-200'); // The color for active tab
+        tab.classList.remove('bg-gray-200');
         if (tab.getAttribute('onclick').includes(monthId)) {
-          tab.classList.add('bg-gray-200'); // The color for active tab
+          tab.classList.add('bg-gray-200');
         }
       });
 
-      // Hide all tab contents
+
       document.querySelectorAll('.tab-content').forEach(el => el.style.display = 'none');
-      // Show the selected month's expenses
+
       document.getElementById(monthId).style.display = 'block';
     }
 
     function showEditModal(expenseId) {
-      // Show the edit modal
+
       const modal = document.getElementById('editModal');
       if (modal) {
-        // Fetch the expense data
+
         fetch(`/get-expense/${expenseId}`)
           .then(response => response.json())
           .then(data => {
-            // Populate the modal fields
+
             modal.querySelector('input[name="amount"]').value = data.amount;
             modal.querySelector('form').action = `/update-expense/${data._id}`;
-            // Show the modal
+
             modal.style.display = 'block';
           })
           .catch(error => console.error('Error fetching expense:', error));
-      } // Update form action to include the expense ID
+      }
       modal.querySelector('form').action = `/update-expense/${expenseId}`;
       modal.style.display = 'block';
     }
-    // You can also fetch expense details here if needed
 
-    // Close the modal
+
+
     if (document.getElementById('editModal')) {
       const modal = document.getElementById('editModal');
       const closeButton = document.querySelector('.close-button');
@@ -118,7 +117,7 @@
       });
     }
 
-    // Show the current month's expenses by default
+
     const currentMonthId = luxon.DateTime.now().toFormat('MMMM yyyy').replace(/\s+/g, '');
     showMonth(currentMonthId);
 

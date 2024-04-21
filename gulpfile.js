@@ -39,7 +39,7 @@ gulp.task('browserSync', function () {
   browserSync.init({
     proxy: 'http://192.168.18.102:3000',
     port: 5000,
-    open: true,
+    open: 'external',
     notify: false,
   });
 

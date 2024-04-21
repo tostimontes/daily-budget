@@ -1,10 +1,8 @@
 const express = require('express');
-// const passport = require('passport');
-
 const router = express.Router();
 const { DateTime } = require('luxon');
 const passport = require('passport');
-const { genPassword } = require('../middleware/passwordUtils'); // Assume you have this utility for hashing passwords
+const { genPassword } = require('../middleware/passwordUtils');
 
 const Expenses = require('../models/expense');
 const Budget = require('../models/budget');
@@ -12,14 +10,11 @@ const UserPreferences = require('../models/userPreferences');
 const User = require('../models/user');
 
 // Routes
-// Dashboard Route
 router.get('/', async (req, res, next) => {
-  console.log(`User: ${req.user}`);
   if (!req.user) {
     res.redirect('/login');
   } else {
     try {
-      // Fetch the latest budget and expenses for the logged-in user
       const latestBudget = await Budget.findOne({ user: req.user._id }).sort({
         date: -1,
       });
@@ -27,14 +22,12 @@ router.get('/', async (req, res, next) => {
         date: -1,
       });
 
-      // If no expenses or budget, set default values
       const totalExpenses = expenses.reduce(
         (acc, exp) => acc + exp.amount,
         0,
         expenses
       );
 
-      // Calculate remaining days in the month and days passed
       const today = new Date();
       const month = new Date(
         today.getFullYear(),
@@ -48,23 +41,20 @@ router.get('/', async (req, res, next) => {
       const daysPassed = today.getDate();
       const daysRemaining = daysInMonth - daysPassed;
 
-      // Calculate the recommended average daily expense
       const averageDailyBudget = latestBudget
         ? latestBudget.totalBudget / daysInMonth
         : 0;
 
-      // Calculate remaining budget
       const remainingBudget = latestBudget
         ? latestBudget.totalBudget - totalExpenses
         : 0;
 
-      // Calculate remaining budget per day and ongoing expenses per day
       const remainingBudgetPerDay =
         daysRemaining > 0 ? remainingBudget / daysRemaining : 0;
       const ongoingExpensesPerDay =
         daysPassed > 0 ? totalExpenses / daysPassed : 0;
 
-      const userId = req.user._id; // Replace with your method of getting the current user
+      const userId = req.user._id;
       const preferences = (await UserPreferences.findOne({ userId })) || {};
 
       res.render('dashboard', {
@@ -76,7 +66,7 @@ router.get('/', async (req, res, next) => {
         remainingBudgetPerDay,
         ongoingExpensesPerDay,
         date: today.toDateString(),
-        preferences, // Pass preferences to the dashboard
+        preferences,
       });
     } catch (error) {
       next(error);
@@ -85,14 +75,20 @@ router.get('/', async (req, res, next) => {
 });
 
 // Login Route
-router.get('/login', (req, res) => res.render('login'));
+router.get('/login', (req, res) => {
+  var messages = req.flash('error');
+  res.render('login', { messages: messages, hasErrors: messages.length > 0 });
+});
+
 router.post(
   '/login',
   passport.authenticate('local', {
-    successRedirect: '/',
     failureRedirect: '/login',
     failureFlash: true,
-  })
+  }),
+  function (req, res) {
+    res.redirect('/');
+  }
 );
 
 router.post('/logout', function (req, res, next) {
@@ -105,9 +101,10 @@ router.post('/logout', function (req, res, next) {
 });
 
 // Signup Route
-router.get('/sign-up', (req, res) => res.render('sign-up'));
-router.post('/sign-up', async (req, res) => {
-  const { username, password } = req.body;
+router.get('/sign-up', (req, res, next) => res.render('sign-up'));
+
+router.post('/sign-up', async (req, res, next) => {
+  const { username, email, password } = req.body;
   try {
     const saltHash = genPassword(password);
     const salt = saltHash.salt;
@@ -115,6 +112,7 @@ router.post('/sign-up', async (req, res) => {
 
     const newUser = new User({
       username,
+      email,
       hash,
       salt,
     });
@@ -126,10 +124,10 @@ router.post('/sign-up', async (req, res) => {
   }
 });
 
-router.get('/settings', async (req, res) => {
+router.get('/settings', async (req, res, next) => {
   try {
     if (!req.user) {
-      res.redirect('/'); // or redirect to login
+      res.redirect('/');
       return;
     }
 
@@ -138,7 +136,7 @@ router.get('/settings', async (req, res) => {
 
     res.render('settings', {
       preferences,
-      user: req.user, // Pass the user data to the template
+      user: req.user,
     });
   } catch (error) {
     console.error('Error loading settings:', error);
@@ -146,9 +144,9 @@ router.get('/settings', async (req, res) => {
   }
 });
 
-router.post('/settings', async (req, res) => {
+router.post('/settings', async (req, res, next) => {
   try {
-    const userId = req.user._id; // Replace with your method of getting the current user
+    const userId = req.user._id;
     const { currency, notificationTime, budgetThreshold } = req.body;
     await UserPreferences.findOneAndUpdate(
       { userId },
@@ -185,26 +183,25 @@ router.get('/history', async (req, res, next) => {
 });
 
 // Add Expense Route
-router.post('/add-expense', async (req, res) => {
+router.post('/add-expense', async (req, res, next) => {
   const { name, amount } = req.body;
   const newExpense = new Expenses({
     name,
     amount,
-    user: req.user._id, // Save user ID with the expense
+    user: req.user._id,
   });
   await newExpense.save();
   res.redirect('/');
 });
 // Update Budget Route
-router.post('/update-budget', async (req, res) => {
+router.post('/update-budget', async (req, res, next) => {
   try {
     const { budget } = req.body;
 
-    // Create a new budget or update the existing one for the logged-in user
     const latestBudget = await Budget.findOneAndUpdate(
-      { user: req.user._id }, // Find the latest budget for this user
-      { totalBudget: budget, user: req.user._id }, // Update the budget value and confirm the user
-      { new: true, upsert: true } // Options to create a new one if it doesn't exist
+      { user: req.user._id },
+      { totalBudget: budget, user: req.user._id },
+      { new: true, upsert: true }
     );
 
     res.redirect('/');

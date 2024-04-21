@@ -7,28 +7,26 @@
   <title>Dashboard</title>
   <link rel='stylesheet' href='/stylesheets/output.css' />
   <link href="/mdi/css/materialdesignicons.min.css" rel="stylesheet">
+  <link rel="icon" href="/images/logo.ico" type="image/x-icon">
 </head>
 
 <body class="bg-gray-100">
   <div class="container mx-auto px-4">
     <h1 class="text-xl font-bold my-4">User Settings</h1>
 
-    <!-- User Information -->
     <div class="bg-white p-4 rounded-lg shadow mb-4">
       <h2 class="text-lg font-semibold">User Information</h2>
-      <p>Logged in as: <%= user.displayName %></p>
+      <p>Logged in as: <%= user.username %></p>
       <p>Email: <%= user.email %></p>
     </div>
 
 
-    <!-- Settings Form -->
     <form action="/settings" method="post" class="bg-white p-4 rounded-lg shadow">
       <div class="mb-4">
         <label for="currency" class="block text-gray-700 text-sm font-bold mb-2">Currency:</label>
         <select name="currency" id="currency" class="shadow border rounded py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline">
           <option value="EUR" <%= preferences.currency === 'EUR' ? 'selected' : '' %>>EUR</option>
           <option value="USD" <%= preferences.currency === 'USD' ? 'selected' : '' %>>USD</option>
-          <!-- Add more currencies as needed -->
         </select>
       </div>
 
@@ -46,7 +44,7 @@
         Save Settings
       </button>
     </form>
-    <a href="/" class="text-blue-500">Back to Dashboard</a>
+    <a href="/" class="text-blue-500 text-2xl flex justify-center mt-4"><i class="mdi mdi-keyboard-backspace"></i>Back to Dashboard </a>
   </div>
 </body>
 

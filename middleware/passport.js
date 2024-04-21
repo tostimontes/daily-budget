@@ -11,18 +11,16 @@ const customFields = {
 const verifyCallback = (username, password, done) => {
   User.findOne({ username: username })
     .then((user) => {
-
       if (!user) {
-        return done(null, false);
+        return done(null, false, { message: 'No username found.' });
       }
-
 
       const isValid = validPassword(password, user.hash, user.salt);
 
       if (isValid) {
         return done(null, user);
       } else {
-        return done(null, false);
+        return done(null, false, { message: 'Incorrect password.' });
       }
     })
     .catch((err) => {

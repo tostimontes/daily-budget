@@ -4,24 +4,40 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Login</title>
-  <link rel='stylesheet' href='/stylesheets/style.css' />
+  <title>Daily Budget App</title>
+  <link rel='stylesheet' href='/stylesheets/output.css' />
+  <link href="/mdi/css/materialdesignicons.min.css" rel="stylesheet">
+  <link rel="icon" href="/images/logo.ico" type="image/x-icon">
 </head>
 
-<body>
-  <h1>Login</h1>
-  <form action="/login" method="POST">
-    <div>
-      <label for="username">Username:</label>
-      <input type="text" id="username" name="username" required>
-    </div>
-    <div>
-      <label for="password">Password:</label>
-      <input type="password" id="password" name="password" required>
-    </div>
-    <button type="submit">Login</button>
-    <p>Not yet registered? <a href="/sign-up">Sign up here</a>.</p>
-  </form>
+<body class="bg-gray-100">
+  <div class="container mx-auto px-4">
+    <h1 class="text-xl font-bold my-4">Welcome to the Daily Budget App</h1>
+    <h1 class="text-xl font-bold my-4">Login</h1>
+    <% if(hasErrors) { %>
+    <% messages.forEach(function(message) { %>
+    <div class="text-red-600 font-bold text-xl"><%= message %></div>
+    <% }); %>
+    <% } %>
+    <form action="/login" method="post" class="my-4">
+      <div class="mb-4">
+        <label for="username" class="block text-gray-700 text-sm font-bold mb-2">Username:</label>
+        <input type="text" name="username" id="username" placeholder="Enter your username" class="border p-2 rounded w-full">
+      </div>
+      <div class="mb-6">
+        <label for="password" class="block text-gray-700 text-sm font-bold mb-2">Password:</label>
+        <input type="password" name="password" id="password" placeholder="Enter your password" class="border p-2 rounded w-full">
+      </div>
+      <div class="flex items-center justify-between">
+        <button type="submit" class="mdi mdi-login bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline">
+          Log In
+        </button>
+        <a class="inline-block align-baseline font-bold text-sm text-blue-500 hover:text-blue-800" href="/sign-up">
+          Not yet registered? Sign up!
+        </a>
+      </div>
+    </form>
+  </div>
 </body>
 
 </html>

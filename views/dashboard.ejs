@@ -7,17 +7,18 @@
   <title>Dashboard</title>
   <link rel='stylesheet' href='/stylesheets/output.css' />
   <link href="/mdi/css/materialdesignicons.min.css" rel="stylesheet">
+  <link rel="icon" href="/images/logo.ico" type="image/x-icon">
 </head>
 
 <body class="bg-gray-100">
   <header class="flex justify-between items-center py-4 px-4">
-    <h1 class="text-xl font-bold">Expense Tracker Dashboard</h1>
-    <div>
-      <a href="/settings" class="mdi mdiCog bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mr-2 ">
+    <h1 class="text-4xl font-bold">Dashboard</h1>
+    <div class="flex flex-col gap-2">
+      <a href="/settings" class="mdi mdi-cog bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded mr-2 ">
         Settings
       </a>
       <form action="/logout" method="post">
-        <button type="submit" class="mdi mdiLogout bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded ">
+        <button type="submit" class="mdi mdi-logout bg-red-500 hover:bg-red-700 text-white font-bold py-2 px-4 rounded ">
           Logout
         </button>
       </form>
@@ -25,41 +26,50 @@
     </div>
   </header>
   <div class="container mx-auto px-4">
-    <!-- Display Budget and Expenses -->
-    <div>
+    <div class="text-xl">
       <p class="font-bold">
-        <span class="text-gray-700"><%= date %></span>
-      </p>
-      <p class="font-bold">Budget for <%= month %>:
-        <span class="text-gray-700 font-bold"><%= budget ? budget.totalBudget.toFixed(2) : 'Not Set' %>€</span>
+        <span class="text-black">Today is:<br> </span><span class="mdi mdi-calendar text-gray-700"> </span><%= date %></span>
       </p>
       <br>
-      <p class="font-bold">Ongoing Expenses:
-        <span class="text-red-600"><%= expenses.reduce((acc, exp) => acc + exp.amount, 0).toFixed(2) %>€</span>
-      </p>
-      <p class="font-bold">Remaining Budget:
-        <span class="<%= remainingBudget >= 0 ? 'text-green-600' : 'text-red-600' %>"><%= remainingBudget.toFixed(2) %>€</span>
-      </p>
+      <div class="flex flex-col items-center text-center">
+        <p class="font-bold">Budget for <%= month %>:<br>
+          <span class="text-gray-700 font-bold text-3xl "><%= budget ? budget.totalBudget.toFixed(2) : 'Not Set' %>€</span>
+        </p>
+      </div>
       <br>
-      <p class="font-bold">Remaining Budget Per Day:
-        <span class="<%= 
-    remainingBudgetPerDay >= averageDailyBudget ? 'text-green-700' :
-    remainingBudgetPerDay >= averageDailyBudget * 0.75 ? 'text-green-400' :
-    remainingBudgetPerDay >= averageDailyBudget * 0.5 ? 'text-yellow-700' :
-    remainingBudgetPerDay >= averageDailyBudget * 0.25 ? 'text-red-400' : 
-    'text-red-700' %>"><%= remainingBudgetPerDay.toFixed(2) %>€</span>
-      </p>
-      <p class="font-bold">Ongoing Expenses Per Day:
-        <span class="<%= 
-    ongoingExpensesPerDay <= averageDailyBudget ? 'text-green-700' :
-    ongoingExpensesPerDay <= averageDailyBudget * 1.25 ? 'text-green-400' :
-    ongoingExpensesPerDay <= averageDailyBudget * 1.5 ? 'text-yellow-700' :
-    ongoingExpensesPerDay <= averageDailyBudget * 1.75 ? 'text-red-400' :
-    'text-red-700' %>"><%= ongoingExpensesPerDay.toFixed(2) %>€</span>
-      </p>
+      <div style="display: flex; justify-content: space-around; align-items: center;">
+        <div>
+          <p class="font-bold text-center">Ongoing Expenses</p>
+          <p class="text-red-600 text-center font-bold"><%= expenses.reduce((acc, exp) => acc + exp.amount, 0).toFixed(2) %>€</p>
+        </div>
+        <div>
+          <p class="font-bold text-center">Remaining Budget</p>
+          <p class="<%= remainingBudget >= 0 ? 'text-green-600' : 'text-red-600' %> text-center font-bold"><%= remainingBudget.toFixed(2) %>€</p>
+        </div>
+      </div>
+
+      <div style="display: flex; justify-content: space-around; align-items: center; margin-top: 20px;">
+        <div>
+          <p class="font-bold text-center">per day:</p>
+          <p class="<%= 
+        ongoingExpensesPerDay <= averageDailyBudget ? 'text-green-700' :
+        ongoingExpensesPerDay <= averageDailyBudget * 1.25 ? 'text-green-400' :
+        ongoingExpensesPerDay <= averageDailyBudget * 1.5 ? 'text-yellow-700' :
+        ongoingExpensesPerDay <= averageDailyBudget * 1.75 ? 'text-red-400' :
+        'text-red-700' %> text-center font-bold"><%= ongoingExpensesPerDay.toFixed(2) %>€</p>
+        </div>
+        <div>
+          <p class="font-bold text-center">per day:</p>
+          <p class="<%= 
+        remainingBudgetPerDay >= averageDailyBudget ? 'text-green-700' :
+        remainingBudgetPerDay >= averageDailyBudget * 0.75 ? 'text-green-400' :
+        remainingBudgetPerDay >= averageDailyBudget * 0.5 ? 'text-yellow-700' :
+        remainingBudgetPerDay >= averageDailyBudget * 0.25 ? 'text-red-400' : 
+        'text-red-700' %> text-center font-bold"><%= remainingBudgetPerDay.toFixed(2) %>€</p>
+        </div>
+      </div>
     </div>
 
-    <!-- Add Expense Form -->
     <form action="/add-expense" method="post" class="my-4">
       <input type="text" name="name" placeholder="Expense name (optional)" class="border p-2 rounded">
       <input type="number" name="amount" placeholder="Expense amount" class="border p-2 rounded" required>
@@ -68,7 +78,6 @@
       </button>
     </form>
 
-    <!-- Update Budget Form -->
     <form action="/update-budget" method="post" class="mb-4">
       <input type="number" name="budget" placeholder="Set Budget" class="border p-2 rounded">
       <button type="submit" class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
@@ -76,7 +85,7 @@
       </button>
     </form>
 
-    <a href="/history" class="text-blue-500">View History</a>
+    <a href="/history" class="text-blue-500 text-2xl flex justify-center mt-4"><i class="mdi mdi-history"></i> View History</a>
   </div>
 </body>
 

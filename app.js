@@ -6,16 +6,16 @@ const cookieParser = require('cookie-parser');
 const logger = require('morgan');
 const mongoose = require('mongoose');
 const session = require('express-session');
+const flash = require('connect-flash');
 const passport = require('passport');
-require('./middleware/passport'); // Ensure Passport configuration is loaded
+require('./middleware/passport');
 
 const MongoStore = require('connect-mongo');
 const Expenses = require('./models/expense');
 const Budget = require('./models/budget');
-const User = require('./models/user'); // Import the User model
+const User = require('./models/user');
 const engine = require('ejs-mate');
 const indexRouter = require('./routes/index');
-const usersRouter = require('./routes/users');
 
 const app = express();
 
@@ -34,13 +34,15 @@ const sessionStore = MongoStore.create({
 
 app.use(
   session({
-    secret: process.env.SESSION_SECRET, // Secret key for signing the session ID cookie
-    resave: false, // Avoid resaving sessions that haven't changed
-    saveUninitialized: false, // Don't save an uninitialized session
+    secret: process.env.SESSION_SECRET,
+    resave: false,
+    saveUninitialized: false,
     store: sessionStore,
-    cookie: { maxAge: 24 * 60 * 60 * 1000 }, // Cookie expiration set to 1 day
+    cookie: { maxAge: 24 * 60 * 60 * 1000 },
   })
 );
+
+app.use(flash());
 
 app.engine('ejs', engine);
 app.set('view engine', 'ejs');
@@ -65,7 +67,6 @@ app.use((req, res, next) => {
 });
 
 app.use('/', indexRouter);
-app.use('/users', usersRouter);
 
 // Catch 404 and forward to error handler
 app.use(function (req, res, next) {

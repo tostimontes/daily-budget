@@ -7,7 +7,7 @@ const { Schema } = mongoose;
 const userPreferencesSchema = new Schema({
   userId: { type: Schema.Types.ObjectId, ref: 'User', unique: true },
   currency: { type: String, default: 'EUR' },
-  notificationTime: { type: String, default: '20:00' }, // HH:mm format
+  notificationTime: { type: String, default: '20:00' },
   budgetThreshold: { type: Number, default: 0 },
 });
 
