@@ -12,10 +12,10 @@
 </head>
 
 <body>
-  <div class="container mx-auto px-4">
-    <h1 class="text-xl font-bold my-4">Expense History</h1>
+  <div class="container mx-auto">
+    <h1 class="text-2xl font-bold my-4 pl-4">Expense History</h1>
 
-    <div class="tabs flex">
+    <div class="tabs flex pl-2">
       <% Object.keys(monthlyExpenses).forEach(month => { %>
       <button class="tab py-2 px-4 bg-white rounded-t-lg border border-gray-300 hover:bg-gray-100" onclick="showMonth('<%= month.replace(/\s+/g, '') %>')">
         <%= month %>
@@ -26,16 +26,16 @@
 
     <% Object.keys(monthlyExpenses).forEach(month => { %>
     <div id="<%= month.replace(/\s+/g, '') %>" class="tab-content" style="display: none;">
-      <table class="min-w-full bg-white">
+      <table class="min-w-full bg-white text-center">
         <tbody>
           <% monthlyExpenses[month].forEach((exp, index) => { %>
           <tr class="<%= index % 2 === 0 ? 'bg-gray-100' : 'bg-white' %>">
             <td class="px-6 py-4"><%= new Date(exp.date).toLocaleDateString('en-GB', { year: '2-digit', month: '2-digit', day: '2-digit' }) %></td>
-            <td class="px-6 py-4"><%= exp.amount %>€ <%= exp.name ? '(' + exp.name + ')' : '' %></td>
-            <td class="px-6 py-4">
-              <a href="javascript:void(0);" onclick="showEditModal('<%= exp._id %>')" class="mdi mdi-pencil-outline text-blue-500">Edit</a>
-              <a href="javascript:void(0);" onclick="showDeleteModal('/delete-expense/<%= exp._id %>')" class="mdi mdi-delete-outline text-red-500 ml-2">Delete</a>
+            <td class="px-6 py-4"><%= exp.amount %>€ <br> <%= exp.name ? '(' + exp.name + ')' : '' %></td>
+            <td class="px-4 py-4 text-center">
+              <a href="javascript:void(0);" onclick="showEditModal('<%= exp._id %>')" class=" text-blue-500 "><i class="mdi mdi-pencil-outline"></i>Edit</a> <br>
             </td>
+            <td class="px-4 py-4 text-center flex"><a href="javascript:void(0);" onclick="showDeleteModal('/delete-expense/<%= exp._id %>')" class=" text-red-500 ml-2 "><i class="mdi mdi-delete-outline"></i>Delete</a></td>
           </tr>
           <% }) %>
         </tbody>
