@@ -2,7 +2,7 @@
 
 The Daily Budget App is a simple full-stack web application built using Express.js and EJS for managing daily expenses. It allows users to track their expenses, view historical data, and calculate their remaining budget based on daily expenses. This application is designed to work seamlessly on both desktop and mobile platforms.
 
-You can use the application at 🔗 *[dailybudget.es](dailybudget.es)*
+You can use the application at 🔗 *[dailybudget.es](https://dailybudget.es)*
 
 ![example-usage](./public/images/example-usage.gif)
 
