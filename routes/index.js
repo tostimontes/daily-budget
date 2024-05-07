@@ -18,7 +18,16 @@ router.get('/', async (req, res, next) => {
       const latestBudget = await Budget.findOne({ user: req.user._id }).sort({
         date: -1,
       });
-      const expenses = await Expenses.find({ user: req.user._id }).sort({
+      const today = new Date();
+      const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+      const endOfMonth = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+      const expenses = await Expenses.find({
+        user: req.user._id,
+        date: {
+          $gte: startOfMonth,
+          $lte: endOfMonth
+        }
+      }).sort({
         date: -1,
       });
 
@@ -28,7 +37,6 @@ router.get('/', async (req, res, next) => {
         expenses
       );
 
-      const today = new Date();
       const month = new Date(
         today.getFullYear(),
         today.getMonth()
@@ -58,9 +66,9 @@ router.get('/', async (req, res, next) => {
       const preferences = (await UserPreferences.findOne({ userId })) || {};
 
       res.render('dashboard', {
-        month: month,
+        month,
         budget: latestBudget,
-        expenses: expenses,
+        expenses,
         averageDailyBudget,
         remainingBudget,
         remainingBudgetPerDay,
